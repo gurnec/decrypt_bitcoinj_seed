@@ -36,7 +36,7 @@
 
 from __future__ import print_function
 
-__version__ =  '0.1.0'
+__version__ =  '0.2.0'
 
 import hashlib, sys, getpass
 import aespython.key_expander, aespython.aes_cipher, aespython.cbc_mode
@@ -159,6 +159,36 @@ def extract_mnemonic(pb_wallet, get_password_fn):
         raise ValueError('no BIP39 mnemonic found')
 
 
+def find_unextracted(pb_wallet):
+    """search for non-BIP32 keys or extra BIP39 mnemonics
+    :param pb_wallet: a Wallet protobuf message
+    :type pb_wallet: wallet_pb2.Wallet
+    :return: a warning string if found, else ''
+    :rtype: str
+    """
+    nonbip32_count = mnemonic_count = unknown_count = 0
+    for key in pb_wallet.key:
+        if key.type == wallet_pb2.Key.ORIGINAL or key.type == wallet_pb2.Key.ENCRYPTED_SCRYPT_AES:
+            nonbip32_count += 1
+        elif key.type == wallet_pb2.Key.DETERMINISTIC_MNEMONIC:
+            mnemonic_count += 1
+        elif key.type == wallet_pb2.Key.DETERMINISTIC_KEY:
+            pass  # ideally we would check that these derive from the mnemonic
+        else:
+            unknown_count += 1
+
+    warning_msg = ''
+    if nonbip32_count:
+        warning_msg += str(nonbip32_count) + ' non-deterministic keys found.\n'
+    if mnemonic_count > 1:
+        warning_msg += str(mnemonic_count-1) + ' extra mnemonics found.\n'
+    if unknown_count:
+        warning_msg += str(unknown_count) + ' unknown key types found.\n'
+    if warning_msg:
+        warning_msg += 'Your mnemonic backup does NOT back up your entire wallet.'
+    return warning_msg
+
+
 if __name__ == '__main__':
 
     padding      = 6     # GUI widget padding
@@ -177,7 +207,7 @@ if __name__ == '__main__':
                 encoding = sys.stdin.encoding or ''
                 if 'utf' not in encoding.lower():
                     print('terminal does not support UTF; passwords with non-ASCII chars might not work', file=sys.stderr)
-                password = getpass.getpass(prompt)
+                password = getpass.getpass(prompt + ' ')
                 if isinstance(password, str) and encoding:
                     password = password.decode(encoding)  # convert from terminal's encoding to unicode
                 return password
@@ -246,13 +276,21 @@ if __name__ == '__main__':
                 raise
             display_error(str(e))
 
+    extra_keys_warning = find_unextracted(wallet)
+
     # command-line specific code
     if len(sys.argv) > 1:
+        if extra_keys_warning:
+            print('\nWARNING:')
+            print(extra_keys_warning)
         print('\nWARNING: seed information is sensitive, carefully protect it and do not share')
         print('decrypted seed mnemonic:\n', mnemonic)
 
     # GUI specific code
     else:
+
+        if extra_keys_warning:
+            tkMessageBox.showwarning('Warning', extra_keys_warning)
 
         # Create the text box that will hold the mnemonic
         entry = tk.Entry(width=80, readonlybackground='white')
