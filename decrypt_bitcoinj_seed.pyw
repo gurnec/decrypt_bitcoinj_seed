@@ -36,7 +36,7 @@
 
 from __future__ import print_function
 
-__version__ =  '0.2.0'
+__version__ =  '0.2.1'
 
 import hashlib, sys, getpass
 import aespython.key_expander, aespython.aes_cipher, aespython.cbc_mode
@@ -203,12 +203,12 @@ if __name__ == '__main__':
         wallet_file = open(sys.argv[1], 'rb')
 
         def get_password_factory(prompt):
-            def get_password():
-                encoding = sys.stdin.encoding or ''
+            def get_password():  # must return unicode
+                encoding = sys.stdin.encoding or 'ASCII'
                 if 'utf' not in encoding.lower():
                     print('terminal does not support UTF; passwords with non-ASCII chars might not work', file=sys.stderr)
                 password = getpass.getpass(prompt + ' ')
-                if isinstance(password, str) and encoding:
+                if isinstance(password, str):
                     password = password.decode(encoding)  # convert from terminal's encoding to unicode
                 return password
             return get_password
@@ -243,12 +243,13 @@ if __name__ == '__main__':
             root.update()
 
         # These functions differ between command-line and GUI runs
-        def get_password():
-            return tkSimpleDialog.askstring('Password', 'This wallet backup is encrypted, please enter its password:', show='*')
-        def get_pin():
-            pin =  tkSimpleDialog.askstring('Password', "This wallet's seed is encrypted with a PIN or password, please enter it:", show='*')
-            init_window()  # display the progress bar -- this may take a while if there are no binary scrypts installed
-            return pin
+        def get_password():  # must return Unicode
+            password = tkSimpleDialog.askstring('Password', 'This wallet backup is encrypted, please enter its password:', show='*')
+            return password.decode('ASCII') if isinstance(password, str) else password
+        def get_pin():       # must return Unicode
+            pin = tkSimpleDialog.askstring('Password', "This wallet's seed is encrypted with a PIN or password, please enter it:", show='*')
+            init_window()    # display the progress bar -- this may take a while if there are no binary scrypts installed
+            return pin.decode('ASCII') if isinstance(pin, str) else pin
         def display_error(msg):
             return tkMessageBox.showerror('Error', msg)
 

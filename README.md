@@ -43,7 +43,7 @@ Simply double-click decrypt\_bitcoinj\_seed.pyw and choose your wallet file in t
 
 ## Credits ##
 
-Third-party libraries distributed with delete\_bitcoinj\_key.pyw include:
+Third-party libraries distributed with decrypt\_bitcoinj\_seed.pyw include:
 
  * aespython, please see [aespython/README.txt](aespython/README.txt) for
  more information

@@ -10,6 +10,7 @@ if ( -not (Test-Path -Path C:\Python27 -PathType Container) ) {
 
 C:\Python27\python "$env:TEMP\get-pip.py"
 if ($LastExitCode -ne 0) {
+    del "$env:TEMP\get-pip.py"
     Write-Host -NoNewline Failed to install Python pip. Press any key to exit ...
     $host.UI.RawUI.ReadKey("NoEcho,IncludeKeyDown") > $null
     exit 1
@@ -19,7 +20,7 @@ del "$env:TEMP\get-pip.py"
 
 C:\Python27\Scripts\pip install protobuf pylibscrypt
 if ($LastExitCode -ne 0) {
-    Write-Host -NoNewline Failed to install Google Protobuf for Python. Press any key to exit ...
+    Write-Host -NoNewline Failed to install required Python libraries. Press any key to exit ...
     $host.UI.RawUI.ReadKey("NoEcho,IncludeKeyDown") > $null
     exit 1
 }
