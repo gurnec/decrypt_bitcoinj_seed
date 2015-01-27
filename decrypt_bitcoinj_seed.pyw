@@ -1,6 +1,6 @@
 #!/usr/bin/python
 
-# extract-bitcoinj-seed.py
+# extract-bitcoinj-seed.py - Seed extractor for bitcoinj-based wallets
 # Copyright (C) 2014 Christopher Gurnee
 # All rights reserved.
 #
@@ -223,7 +223,7 @@ if __name__ == '__main__':
 
         import Tkinter as tk, ttk, tkFileDialog, tkSimpleDialog, tkMessageBox
 
-        root = tk.Tk(className='Bitcoinj Key Deleter')  # initialize the library
+        root = tk.Tk(className='Bitcoinj Seed Extractor')  # initialize the library
         root.withdraw()                                 # but don't display a window yet
 
         wallet_file = tkFileDialog.askopenfile('rb', title='Load wallet file')
