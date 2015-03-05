@@ -36,9 +36,9 @@
 
 from __future__ import print_function
 
-__version__ =  '0.2.1'
+__version__ =  '0.3.0'
 
-import hashlib, sys, getpass
+import hashlib, sys, os, getpass
 import aespython.key_expander, aespython.aes_cipher, aespython.cbc_mode
 import wallet_pb2
 
@@ -73,8 +73,9 @@ def aes256_cbc_decrypt(ciphertext, key, iv):
     return str(plaintext[:-padding_len])
 
 
+multibit_hd_password = None
 def load_wallet(wallet_file, get_password_fn):
-    """load and if necessary decrypt (OpenSSL style) a bitcoinj wallet file
+    """load and if necessary decrypt a bitcoinj wallet file
 
     :param wallet_file: an open bitcoinj wallet file
     :type wallet_file: file
@@ -88,16 +89,16 @@ def load_wallet(wallet_file, get_password_fn):
     wallet_file.seek(0)
     magic_bytes = wallet_file.read(12)
     try:
-        is_encrypted = magic_bytes.decode('base64').startswith(b'Salted__')
+        is_ossl_encrypted = magic_bytes.decode('base64').startswith(b'Salted__')
     except Exception:
-        is_encrypted = False
+        is_ossl_encrypted = False
     wallet_file.seek(0)
 
-    if is_encrypted:
+    if is_ossl_encrypted:
         ciphertext = wallet_file.read().decode('base64')
         assert len(ciphertext) % 16 == 0
 
-        password = get_password_fn()
+        password = get_password_fn(False)  # False means the kdf below is fast
         if not password:
             return None
 
@@ -111,7 +112,35 @@ def load_wallet(wallet_file, get_password_fn):
         plaintext = aes256_cbc_decrypt(ciphertext[16:], key1 + key2, iv)
 
     else:
-        plaintext = wallet_file.read()
+        # If it doesn't look like a bitcoinj file, assume it's encrypted MultiBit HD style
+        wallet_file.seek(0, os.SEEK_END)
+        wallet_size = wallet_file.tell()
+        wallet_file.seek(0)
+        if not magic_bytes.startswith('\x0a\x16org.') and wallet_size % 16 == 0:
+            import pylibscrypt
+            takes_long = not pylibscrypt._done  # if a binary library wasn't found, this'll take a while
+
+            ciphertext = wallet_file.read()
+            assert len(ciphertext) % 16 == 0
+
+            password = get_password_fn(takes_long)
+            if not password:
+                return None
+
+            # Derive the encryption key
+            salt = '\x35\x51\x03\x80\x75\xa3\xb0\xc5'
+            key  = pylibscrypt.scrypt(password.encode('utf_16_be'), salt, olen=32)
+
+            # Decrypt the wallet
+            iv        = '\xa3\x44\x39\x1f\x53\x83\x11\xb3\x29\x54\x86\x16\xc4\x89\x72\x3e'
+            plaintext = aes256_cbc_decrypt(ciphertext, key, iv)
+
+            global multibit_hd_password
+            multibit_hd_password = password
+
+        # Else it's not whole-file encrypted
+        else:
+            plaintext = wallet_file.read()
 
     # Parse the wallet protobuf
     pb_wallet = wallet_pb2.Wallet()
@@ -140,10 +169,15 @@ def extract_mnemonic(pb_wallet, get_password_fn):
 
             elif key.HasField('encrypted_data'):  # if encrypted (w/scrypt)
                 import pylibscrypt
+                takes_long = not pylibscrypt._done  # if a binary library wasn't found, this'll take a while
+
+                password = get_password_fn(takes_long)
+                if not password:
+                    return None
 
                 # Derive the encryption key
                 aes_key = pylibscrypt.scrypt(
-                    get_password_fn().encode('utf_16_be'),
+                    password.encode('utf_16_be'),
                     pb_wallet.encryption_parameters.salt,
                     pb_wallet.encryption_parameters.n,
                     pb_wallet.encryption_parameters.r,
@@ -203,7 +237,7 @@ if __name__ == '__main__':
         wallet_file = open(sys.argv[1], 'rb')
 
         def get_password_factory(prompt):
-            def get_password():  # must return unicode
+            def get_password(takes_long_arg_ignored):  # must return unicode
                 encoding = sys.stdin.encoding or 'ASCII'
                 if 'utf' not in encoding.lower():
                     print('terminal does not support UTF; passwords with non-ASCII chars might not work', file=sys.stderr)
@@ -216,7 +250,7 @@ if __name__ == '__main__':
         # These functions differ between command-line and GUI runs
         get_password  = get_password_factory('This wallet backup is encrypted, please enter its password:')
         get_pin       = get_password_factory("This wallet's seed is encrypted with a PIN or password, please enter it:")
-        display_error = lambda(msg): print(msg, file=sys.stderr)
+        display_error = lambda msg: print(msg, file=sys.stderr)
 
     # GUI specific code
     else:
@@ -243,12 +277,15 @@ if __name__ == '__main__':
             root.update()
 
         # These functions differ between command-line and GUI runs
-        def get_password():  # must return Unicode
+        def get_password(takes_long):  # must return Unicode
             password = tkSimpleDialog.askstring('Password', 'This wallet backup is encrypted, please enter its password:', show='*')
+            if takes_long:
+                init_window()  # display the progress bar if this could take a while
             return password.decode('ASCII') if isinstance(password, str) else password
-        def get_pin():       # must return Unicode
+        def get_pin(takes_long):       # must return Unicode
             pin = tkSimpleDialog.askstring('Password', "This wallet's seed is encrypted with a PIN or password, please enter it:", show='*')
-            init_window()    # display the progress bar -- this may take a while if there are no binary scrypts installed
+            if takes_long:
+                init_window()  # display the progress bar if this could take a while
             return pin.decode('ASCII') if isinstance(pin, str) else pin
         def display_error(msg):
             return tkMessageBox.showerror('Error', msg)
@@ -258,7 +295,7 @@ if __name__ == '__main__':
         try:
             wallet = load_wallet(wallet_file, get_password)
             if not wallet:  # if no password was entered
-                exit(1)
+                sys.exit('canceled')
             break
         except ValueError as e:
             if e.args[0] != 'incorrect password':
@@ -266,12 +303,19 @@ if __name__ == '__main__':
             display_error(str(e))
 
     # Extract (and possibly decrypt) the mnemonic, retrying on bad passwords
-    while True:
+    mnemonic = None
+    if multibit_hd_password:
+        # MultiBit HD uses the same password for both whole-file and mnemonic encryption
+        try:
+            mnemonic = extract_mnemonic(wallet, lambda arg_ignored: multibit_hd_password)
+        except ValueError as e:
+            if e.args[0] != 'incorrect password':
+                raise
+    while not mnemonic:
         try:
             mnemonic = extract_mnemonic(wallet, get_pin)
-            if not wallet:  # if no password was entered
-                exit(1)
-            break
+            if not mnemonic:  # if no password was entered
+                sys.exit('canceled')
         except ValueError as e:
             if e.args[0] != 'incorrect password':
                 raise
