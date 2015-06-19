@@ -248,7 +248,7 @@ if __name__ == '__main__':
             return get_password
 
         # These functions differ between command-line and GUI runs
-        get_password  = get_password_factory('This wallet backup is encrypted, please enter its password:')
+        get_password  = get_password_factory('This wallet file is encrypted, please enter its password:')
         get_pin       = get_password_factory("This wallet's seed is encrypted with a PIN or password, please enter it:")
         display_error = lambda msg: print(msg, file=sys.stderr)
 
@@ -278,7 +278,7 @@ if __name__ == '__main__':
 
         # These functions differ between command-line and GUI runs
         def get_password(takes_long):  # must return Unicode
-            password = tkSimpleDialog.askstring('Password', 'This wallet backup is encrypted, please enter its password:', show='*')
+            password = tkSimpleDialog.askstring('Password', 'This wallet file is encrypted, please enter its password:', show='*')
             if takes_long:
                 init_window()  # display the progress bar if this could take a while
             return password.decode('ASCII') if isinstance(password, str) else password
