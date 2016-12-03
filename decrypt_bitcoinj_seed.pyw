@@ -1,7 +1,7 @@
 #!/usr/bin/python
 
-# extract-bitcoinj-seed.py - Seed extractor for bitcoinj-based wallets
-# Copyright (C) 2014 Christopher Gurnee
+# decrypt_bitcoinj_seed.pyw - Seed extractor for bitcoinj-based wallets
+# Copyright (C) 2014, 2016 Christopher Gurnee
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -36,7 +36,7 @@
 
 from __future__ import print_function
 
-__version__ =  '0.3.0'
+__version__ =  '0.4.0'
 
 import hashlib, sys, os, getpass
 import aespython.key_expander, aespython.aes_cipher, aespython.cbc_mode
