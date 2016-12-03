@@ -116,7 +116,7 @@ def load_wallet(wallet_file, get_password_fn):
         wallet_file.seek(0, os.SEEK_END)
         wallet_size = wallet_file.tell()
         wallet_file.seek(0)
-        if not magic_bytes.startswith('\x0a\x16org.') and wallet_size % 16 == 0:
+        if magic_bytes[2:6] != b"org." and wallet_size % 16 == 0:
             import pylibscrypt
             takes_long = not pylibscrypt._done  # if a binary library wasn't found, this'll take a while
 
@@ -131,9 +131,17 @@ def load_wallet(wallet_file, get_password_fn):
             salt = '\x35\x51\x03\x80\x75\xa3\xb0\xc5'
             key  = pylibscrypt.scrypt(password.encode('utf_16_be'), salt, olen=32)
 
-            # Decrypt the wallet
-            iv        = '\xa3\x44\x39\x1f\x53\x83\x11\xb3\x29\x54\x86\x16\xc4\x89\x72\x3e'
-            plaintext = aes256_cbc_decrypt(ciphertext, key, iv)
+            # Decrypt the wallet ( v0.5.0+ )
+            try:
+                plaintext = aes256_cbc_decrypt(ciphertext[16:], key, ciphertext[:16])
+                if plaintext[2:6] != b"org.":
+                    raise ValueError('incorrect password')
+            except ValueError as e:
+                if e.args[0] == 'incorrect password':
+
+                    # Decrypt the wallet ( < v0.5.0 )
+                    iv = '\xa3\x44\x39\x1f\x53\x83\x11\xb3\x29\x54\x86\x16\xc4\x89\x72\x3e'
+                    plaintext = aes256_cbc_decrypt(ciphertext, key, iv)
 
             global multibit_hd_password
             multibit_hd_password = password
