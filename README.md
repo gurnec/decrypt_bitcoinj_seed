@@ -3,7 +3,7 @@
  * a simple Python script which decrypts and displays the seed mnemonic from from a bitcoinj-based HD wallet file
  * supported on Windows and Linux
  * currently supports:
-     * [MultiBit HD](https://beta.multibit.org/) (mbhd.wallet.aes files)
+     * [MultiBit HD](https://beta.multibit.org/) (`mbhd.wallet.aes` files)
      * [Bitcoin Wallet for Android 4.x](https://play.google.com/store/apps/details?id=de.schildbach.wallet) wallet files (requires root)
      * [Bitcoin Wallet for Android 4.x](https://play.google.com/store/apps/details?id=de.schildbach.wallet) encrypted backup files
 
@@ -19,8 +19,8 @@ Just download the latest version from <https://github.com/gurnec/decrypt\_bitcoi
 
 ### Windows ###
 
- * The latest version of Python 2.7, either the 32-bit version or the 64-bit version. Currently this is Python 2.7.10, either the “Windows x86 MSI installer” for the 32-bit version, or the “Windows x86-64 MSI installer” for the 64-bit version (which is preferable if you have a 64-bit version of Windows), both available here: <https://www.python.org/download/>
- * Google Protobuf and pylibscrypt for Python – choose one of the following two installation methods:
+ * Python 2.7 – visit the download page here: <https://www.python.org/downloads/windows/>, and click the link for the latest Python 2 release. Download and run either the `Windows x86 MSI installer` for the 32-bit version of Python, or the `Windows x86-64 MSI installer` for the 64-bit one. If you're unsure which one is compatible with your PC, choose the 32-bit one.
+ * Google Protobuf and pylibscrypt for Python – choose *one* of the following two installation methods:
      * Automated installation: right-click on the included *install-windows-requirements.ps1* file and choose *Run with Powershell*. Automated installation typically only works with Windows Vista SP1 and higher (including Windows 7+), but it doesn't hurt to try with other versions of Windows.
      * Manual installation:
          1. You must have Python 2.7.9 or later (or you must [manually install Python pip](https://pip.pypa.io/en/latest/installing.html#install-pip)).
@@ -35,8 +35,6 @@ Just download the latest version from <https://github.com/gurnec/decrypt\_bitcoi
 
         sudo apt-get install python-pip
         sudo pip install protobuf pylibscrypt
-
-Before running decrypt\_bitcoinj\_seed.pyw for the first time, you must enable the execute permission on the file (right click -> Properties, or use `chmod` at the command line).
 
 ## How to Use ##
 
