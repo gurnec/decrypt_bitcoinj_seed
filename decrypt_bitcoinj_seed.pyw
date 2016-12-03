@@ -140,6 +140,7 @@ def load_wallet(wallet_file, get_password_fn):
 
         # Else it's not whole-file encrypted
         else:
+            password  = None
             plaintext = wallet_file.read()
 
     # Parse the wallet protobuf
@@ -147,7 +148,10 @@ def load_wallet(wallet_file, get_password_fn):
     try:
         pb_wallet.ParseFromString(plaintext)
     except Exception as e:
-        raise ValueError('not a wallet file: ' + str(e))
+        msg = 'not a wallet file: ' + str(e)
+        if password:
+            msg = "incorrect password (or " + msg + ")"
+        raise ValueError(msg)
     return pb_wallet
 
 
@@ -298,9 +302,9 @@ if __name__ == '__main__':
                 sys.exit('canceled')
             break
         except ValueError as e:
-            if e.args[0] != 'incorrect password':
-                raise
             display_error(str(e))
+            if not e.args[0].startswith('incorrect password'):
+                raise
 
     # Extract (and possibly decrypt) the mnemonic, retrying on bad passwords
     mnemonic = None
