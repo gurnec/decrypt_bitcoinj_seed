@@ -3,7 +3,7 @@
  * a simple Python script which decrypts and displays the seed mnemonic from from a bitcoinj-based HD wallet file
  * supported on Windows and Linux
  * currently supports:
-     * [MultiBit HD](https://beta.multibit.org/) (`mbhd.wallet.aes` files)
+     * [MultiBit HD](https://multibit.org/) (`mbhd.wallet.aes` files)
      * [Bitcoin Wallet for Android 4.x](https://play.google.com/store/apps/details?id=de.schildbach.wallet) wallet files (requires root)
      * [Bitcoin Wallet for Android 4.x](https://play.google.com/store/apps/details?id=de.schildbach.wallet) encrypted backup files
 
@@ -38,7 +38,7 @@ Just download the latest version from <https://github.com/gurnec/decrypt\_bitcoi
 
 ## How to Use ##
 
-Simply double-click decrypt\_bitcoinj\_seed.pyw and choose your wallet file in the file selection dialog. Please note that some wallet files may take several minutes to decrypt (if you don't have [one of the optional libraries](https://pypi.python.org/pypi/pylibscrypt/1.3.0#requirements) installed).
+Simply double-click decrypt\_bitcoinj\_seed.pyw and choose your wallet file in the file selection dialog. Please note that some wallet files may take several minutes to decrypt (if you don't have [one of the optional libraries](https://pypi.python.org/pypi/pylibscrypt#requirements) installed).
 
 ## Credits ##
 
