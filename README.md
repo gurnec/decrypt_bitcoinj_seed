@@ -4,8 +4,8 @@
  * supported on Windows and Linux
  * currently supports:
      * [MultiBit HD](https://multibit.org/) (`mbhd.wallet.aes` files)
-     * [Bitcoin Wallet for Android 4.x](https://play.google.com/store/apps/details?id=de.schildbach.wallet) wallet files (requires root)
-     * [Bitcoin Wallet for Android 4.x](https://play.google.com/store/apps/details?id=de.schildbach.wallet) encrypted backup files
+     * [Bitcoin Wallet for Android 4.0+](https://play.google.com/store/apps/details?id=de.schildbach.wallet) wallet files (requires root)
+     * [Bitcoin Wallet for Android 4.0+](https://play.google.com/store/apps/details?id=de.schildbach.wallet) encrypted backup files
 
 ## Warning ##
 
