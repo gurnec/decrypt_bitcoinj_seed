@@ -15,7 +15,7 @@ Even if you are certain you are currently free of malware, it is strongly advise
 
 ## Installation ##
 
-Just download the latest version from <https://github.com/gurnec/decrypt\_bitcoinj\_seed/archive/master.zip> and unzip it to a location of your choice. There’s no installation procedure for the Python script itself, however there are additional requirements below depending on your operating system.
+Just download the latest version from <https://github.com/gurnec/decrypt_bitcoinj_seed/archive/master.zip> and unzip it to a location of your choice. There’s no installation procedure for the Python script itself, however there are additional requirements below depending on your operating system.
 
 ### Windows ###
 

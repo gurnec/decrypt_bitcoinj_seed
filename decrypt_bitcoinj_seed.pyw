@@ -1,7 +1,7 @@
 #!/usr/bin/python
 
 # decrypt_bitcoinj_seed.pyw - Seed extractor for bitcoinj-based wallets
-# Copyright (C) 2014, 2016 Christopher Gurnee
+# Copyright (C) 2014, 2016, 2017 Christopher Gurnee
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -36,7 +36,7 @@
 
 from __future__ import print_function
 
-__version__ =  '0.4.0'
+__version__ =  '0.4.1'
 
 import hashlib, sys, os, getpass
 import aespython.key_expander, aespython.aes_cipher, aespython.cbc_mode
@@ -267,10 +267,14 @@ if __name__ == '__main__':
     # GUI specific code
     else:
 
-        import Tkinter as tk, ttk, tkFileDialog, tkSimpleDialog, tkMessageBox
+        try:
+            import Tkinter as tk, ttk, tkFileDialog, tkSimpleDialog, tkMessageBox
+        except ImportError:
+            print('warning: Python GUI libraries (Tkinter) not found')
+            sys.exit('command-line usage: decrypt_bitcoinj_seed.pyw bitcoinj-wallet-file')
 
         root = tk.Tk(className='Bitcoinj Seed Extractor')  # initialize the library
-        root.withdraw()                                 # but don't display a window yet
+        root.withdraw()                                    # but don't display a window yet
 
         wallet_file = tkFileDialog.askopenfile('rb', title='Load wallet file')
         if not wallet_file:
